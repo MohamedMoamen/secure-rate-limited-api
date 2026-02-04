@@ -18,6 +18,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->enum('status', ['pending', 'completed'])->default('pending');
             $table->timestamps();
+
+            $table->index(['user_id', 'created_at']);
         });
     }
 

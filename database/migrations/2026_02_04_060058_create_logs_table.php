@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('action');
             $table->string('endpoint');
             $table->string('ip_address', 45);
+            $table->unsignedBigInteger('task_id')->nullable();
+            $table->json('old_data')->nullable();
+            $table->json('new_data')->nullable();
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Log;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +23,14 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => $request->password
         ]);
+        
+        Log::create([
+         'user_id' => $user->id,
+         'action' => 'User registered',
+         'endpoint' => $request->path(),
+         'ip_address' => $request->ip(),
+        ]);
+
 
         return response()->json(['message' => 'User registered successfully', 'user' => $user], 201);
     }
@@ -42,17 +51,33 @@ class AuthController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
+        Log::create([
+          'user_id' => $user->id,
+          'action' => 'User logged in',
+          'endpoint' => $request->path(),
+          'ip_address' => $request->ip(),
+        ]);
+
+
          return response()->json([
-        'access_token' => $token,
-        'token_type' => 'bearer',
-        'expires_in' => JWTAuth::factory()->getTTL() * 60,
-        'user' => $user
-    ]);
+          'access_token' => $token,
+          'token_type' => 'bearer',
+          'expires_in' => JWTAuth::factory()->getTTL() * 60,
+          'user' => $user
+         ]);
     }
 
     public function logout()
     {
-        auth()->logout();
+        $user = JWTAuth::parseToken()->authenticate();
+
+        Log::create([
+            'user_id' => $user->id,
+            'action' => 'User logged out',
+            'endpoint' => request()->path(),
+            'ip_address' => request()->ip(),
+        ]);
+        JWTAuth::invalidate(JWTAuth::getToken());
         return response()->json(['message' => 'Successfully logged out']);
     }
 

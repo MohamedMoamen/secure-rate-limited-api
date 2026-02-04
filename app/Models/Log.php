@@ -10,11 +10,15 @@ class Log extends Model
         'user_id',
         'action',
         'endpoint',
-        'ip_address'
+        'ip_address',
+        'task_id',
+        'old_data',
+        'new_data'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
 }

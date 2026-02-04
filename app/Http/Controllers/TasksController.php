@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Log;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -54,6 +55,16 @@ class TasksController extends Controller
             'status' => $request->status ?? 'pending'
         ]);
 
+        Log::create([
+            'user_id' => $user->id,
+            'action' => 'created task',
+            'endpoint' => $request->path(),
+            'ip_address' => $request->ip(),
+            'task_id' => $task->id,
+            'old_data' => null,
+            'new_data' => json_encode($task->toArray())
+        ]);
+
         return response()->json($task, 201);
     }
 
@@ -80,8 +91,19 @@ class TasksController extends Controller
             'status' => 'nullable|in:pending,completed'
         ]);
 
-        $task->update($request->only(['title', 'description', 'status']));
+        $old = $task->toArray();
 
+        $task->update($request->only(['title', 'description', 'status']));
+        
+        Log::create([
+            'user_id' => $user->id,
+            'action' => 'updated task',
+            'endpoint' => $request->path(),
+            'ip_address' => $request->ip(),
+            'task_id' => $task->id,
+            'old_data' => json_encode($old),
+            'new_data' => json_encode($task->toArray())
+        ]);
         return response()->json($task, 200);
     }
 
@@ -102,7 +124,21 @@ class TasksController extends Controller
         }
         }
 
-        $task->delete();
+        $old = $task->toArray();
+        $taskId = $task->id;
+
+
+        Log::create([
+            'user_id' => $user->id,
+            'action' => 'deleted task',
+            'endpoint' => request()->path(),
+            'ip_address' => request()->ip(),
+            'task_id' => $taskId,
+            'old_data' => json_encode($old),
+            'new_data' => null
+        ]);
+
+         $task->delete();
 
         return response()->json(['message' => 'Task deleted successfully'], 200);
     }
